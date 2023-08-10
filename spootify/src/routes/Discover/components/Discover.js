@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import DiscoverBlock from './DiscoverBlock/components/DiscoverBlock';
 import '../styles/_discover.scss';
+import { fetchNewReleases, fetchFeaturedPlaylists, fetchCategories } from '../../../api/spotifyAPI';
 
 export default class Discover extends Component {
   constructor() {
@@ -9,12 +10,35 @@ export default class Discover extends Component {
     this.state = {
       newReleases: [],
       playlists: [],
-      categories: []
+      categories: [],
+      isLoading: true
     };
   }
 
+  componentDidMount() {
+    Promise.all([
+      fetchNewReleases(),
+      fetchFeaturedPlaylists(),
+      fetchCategories()
+    ]).then(([newReleasesData, playlistsData, categoriesData]) => {
+      this.setState({
+        newReleases: newReleasesData.data.albums.items,
+        playlists: playlistsData.data.playlists.items,
+        categories: categoriesData.data.categories.items,
+        isLoading: false
+      });
+    }).catch(error => {
+      console.error("Error fetching data: ", error);
+      this.setState({ isLoading: false });
+    });
+  }
+
   render() {
-    const { newReleases, playlists, categories } = this.state;
+    const { newReleases, playlists, categories, isLoading } = this.state;
+
+    if (isLoading) {
+      return <div>Loading...</div>; // Add your loading UI here
+    }
 
     return (
       <div className="discover">
